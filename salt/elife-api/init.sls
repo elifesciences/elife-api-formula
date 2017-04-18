@@ -43,7 +43,7 @@ collect-static:
     cmd.run:
         - user: {{ pillar.elife.deploy_user.username }}
         - cwd: /srv/elife-api/
-        - name: ./manage.sh collectstatic --noinput'
+        - name: ./manage.sh collectstatic --noinput
         - require:
             - file: cfg-file
             - virtualenv: elife-api-virtualenv
