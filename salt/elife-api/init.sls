@@ -42,8 +42,8 @@ cfg-file:
 collect-static:
     cmd.run:
         - user: {{ pillar.elife.deploy_user.username }}
-        - name: 'PATH="/srv/elife-api/venv/bin/:$PATH"; python manage.py collectstatic --noinput'
-        - cwd: /srv/elife-api/src/
+        - cwd: /srv/elife-api/
+        - name: ./manage.sh collectstatic --noinput'
         - require:
             - file: cfg-file
             - virtualenv: elife-api-virtualenv
