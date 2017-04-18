@@ -2,14 +2,9 @@ elife-api-nginx-conf:
     file.managed:
         - name: /etc/nginx/sites-enabled/elife-api.conf
         - template: jinja
-{% if pillar.elife.env == 'dev' %}
-        - source: salt://elife-api/config/etc-nginx-sitesavailable-elifeapi-http.conf
-{% else %}
         - source: salt://elife-api/config/etc-nginx-sitesavailable-elifeapi-https.conf
         - require:
             - git: elife-api-repo
-            - cmd: acme-fetch-certs
-{% endif %}
 
 elife-api-uwsgi-conf:
     file.managed:
