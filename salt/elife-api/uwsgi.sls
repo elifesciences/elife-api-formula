@@ -26,7 +26,7 @@ elife-api-uwsgi:
             - file: elife-api-uwsgi
             - file: elife-api-uwsgi-conf
             - file: uwsgi-params
-            - pip: uwsgi-pkg
+            - uwsgi-pkg
         - watch:
             - service: nginx-server-service
 
