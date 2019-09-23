@@ -28,18 +28,6 @@ elife-api-virtualenv:
         - require:
             - file: elife-api-dir
 
-# todo: remove once uwsgi available in elife-api/requirements.txt
-elife-api-uwsgi-hack:
-    cmd.run:
-        - cwd: /srv/elife-api/
-        - user: {{ pillar.elife.deploy_user.username }}
-        - name: |
-            set -e
-            source venv/bin/activate
-            pip install "uWSGI==2.0.17.1"
-        - require:
-            - elife-api-virtualenv
-
 cfg-file:
     file.managed:
         - user: {{ pillar.elife.deploy_user.username }}
@@ -51,6 +39,7 @@ cfg-file:
         - require:
             - file: elife-api-dir
 
+# no long necessary
 collect-static:
     cmd.run:
         - user: {{ pillar.elife.deploy_user.username }}
