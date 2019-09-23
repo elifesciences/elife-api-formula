@@ -2,9 +2,13 @@ elife-api-nginx-conf:
     file.managed:
         - name: /etc/nginx/sites-enabled/elife-api.conf
         - template: jinja
-        - source: salt://elife-api/config/etc-nginx-sitesavailable-elifeapi-https.conf
+        - source: salt://elife-api/config/etc-nginx-sitesenabled-elifeapi-https.conf
         - require:
-            - git: elife-api-repo
+            - file: uwsgi-params # builder-base-formula/salt/elife/uwsgi-params.sls (included by uwsgi.sls)
+            - pkg: nginx-server
+            - cmd: web-ssl-enabled
+        - watch_in:
+            - nginx-server-service
 
 elife-api-uwsgi-conf:
     file.managed:
@@ -12,21 +16,47 @@ elife-api-uwsgi-conf:
         - source: salt://elife-api/config/srv-elifeapi-uwsgi.ini
         - template: jinja
         - require:
-            - git: elife-api-repo
-            
-elife-api-uwsgi:
+            - elife-api-repo
+
+{% if salt['grains.get']('osrelease') == "14.04" %}
+
+# 12.04, obsolete
+elife-api-init-script:
     file.managed:
         - name: /etc/init.d/elife-api-uwsgi
         - source: salt://elife-api/config/etc-init.d-elife-api-uwsgi
         - mode: 755
+        - require_in:
+            - service: elife-api-uwsgi
 
+{% else %}
+
+elife-api-init-script:
+    file.absent:
+        - name: /etc/init.d/elife-api-uwsgi
+
+uwsgi-elife-api.socket:
     service.running:
         - enable: True
         - require:
-            - file: elife-api-uwsgi
+            - file: uwsgi-socket-elife-api # builder-base-formula.uwsgi
+        - require_in:
+            - service: uwsgi-elife-api
+
+{% endif %}
+
+uwsgi-elife-api:
+    service.running:
+        - enable: True
+        - require:
+            {% if salt['grains.get']('osrelease') != "14.04" %}
+            - file: uwsgi-service-elife-api # builder-base-formula.uwsgi
+            {% endif %}
+            - file: elife-api-init-script
             - file: elife-api-uwsgi-conf
-            - file: uwsgi-params
-            - uwsgi-pkg
+            - file: elife-api-nginx-conf
+            - uwsgi-pkg # no longer installs uwsgi globally since 16.04+
         - watch:
+            - elife-api-repo
             - service: nginx-server-service
 
