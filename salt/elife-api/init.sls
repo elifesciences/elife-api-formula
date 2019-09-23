@@ -1,9 +1,10 @@
 elife-api-repo:
-    git.latest:
-        - name: https://github.com/elifesciences/elife-api.git
+    builder.git_latest:
+        - name: git@github.com:elifesciences/elife-api.git
+        - identity: {{ pillar.elife.projects_builder.key or '' }}
+        - rev: master
+        - branch: master
         - target: /srv/elife-api/
-        - rev: {{ salt['elife.cfg']('project.branch', 'master') }}
-        - branch: {{ salt['elife.cfg']('project.branch', 'master') }}
         - force_fetch: True
         - force_checkout: True
         - force_reset: True
@@ -17,16 +18,27 @@ elife-api-dir:
             - user
             - group
         - require:
-            - git: elife-api-repo
+            - elife-api-repo
 
 elife-api-virtualenv:
-    virtualenv.managed:
+    cmd.run:
         - user: {{ pillar.elife.deploy_user.username }}
-        - name: /srv/elife-api/venv/
+        - name: ./install.sh
         - cwd: /srv/elife-api/
-        - requirements: /srv/elife-api/requirements.txt
         - require:
             - file: elife-api-dir
+
+# todo: remove once uwsgi available in elife-api/requirements.txt
+elife-api-uwsgi-hack:
+    cmd.run:
+        - cwd: /srv/elife-api/
+        - user: {{ pillar.elife.deploy_user.username }}
+        - name: |
+            set -e
+            source venv/bin/activate
+            pip install "uWSGI==2.0.17.1"
+        - require:
+            - elife-api-virtualenv
 
 cfg-file:
     file.managed:
@@ -46,6 +58,6 @@ collect-static:
         - name: ./manage.sh collectstatic --noinput
         - require:
             - file: cfg-file
-            - virtualenv: elife-api-virtualenv
+            - cmd: elife-api-virtualenv
         - watch_in:
             - service: nginx-server-service
